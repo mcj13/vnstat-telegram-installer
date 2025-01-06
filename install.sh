@@ -152,7 +152,8 @@ deploy_script() {
     local script_path="$1"
     info "正在部署脚本到 $script_path..."
 
-    cat > "$script_path" <<EOF
+    # 构建脚本内容
+    local script_content=$(cat <<EOF
 #!/bin/bash
 
 set -e
@@ -223,14 +224,15 @@ escape_markdown() {
 
 
 # 构建 Telegram 消息 (使用 MarkdownV2)
-message="*服务器名称:* \$(escape_markdown "\$server_name")%0A"
-message+="*IP 地址:* \$(escape_markdown "\$ip_address")%0A"
-message+="*CPU 使用率:* \$(escape_markdown "\${cpu_usage}%")%0A"
-message+="*内存使用率:* \$(escape_markdown "\${mem_usage}")%0A"
-message+="*磁盘使用率:* \$(escape_markdown "\${disk_usage}%")%0A"
-message+="*今日总流量:* \$(escape_markdown "\$(get_vnstat_info daily)")%0A"
-message+="*本月总流量:* \$(escape_markdown "\$(get_vnstat_info monthly)")%0A"
-message+="*总流量:* \$(escape_markdown "\$(get_vnstat_info total)")"
+local message
+message="*服务器名称:* \$(escape_markdown \"\$server_name\")%0A"
+message+="*IP 地址:* \$(escape_markdown \"\$ip_address\")%0A"
+message+="*CPU 使用率:* \$(escape_markdown \"\${cpu_usage}%\")%0A"
+message+="*内存使用率:* \$(escape_markdown \"\${mem_usage}\")%0A"
+message+="*磁盘使用率:* \$(escape_markdown \"\${disk_usage}%\")%0A"
+message+="*今日总流量:* \$(escape_markdown \"\$(get_vnstat_info daily)\")%0A"
+message+="*本月总流量:* \$(escape_markdown \"\$(get_vnstat_info monthly)\")%0A"
+message+="*总流量:* \$(escape_markdown \"\$(get_vnstat_info total)\")"
 
 # 转义 `-` 字符
 message=\$(echo "\$message" | sed 's/-/\\\\-/g')
@@ -249,7 +251,9 @@ else
     echo "错误信息: \$response"
 fi
 EOF
+)
 
+    echo "$script_content" > "$script_path"
     chmod +x "$script_path"
     if [[ $? -eq 0 ]]; then
         info "脚本部署成功！"
@@ -258,7 +262,6 @@ EOF
         exit 1
     fi
 }
-
 
 # 函数：配置 crontab
 configure_crontab() {
