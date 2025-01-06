@@ -214,10 +214,13 @@ get_vnstat_info() {
 # 转义 MarkdownV2 特殊字符函数
 escape_markdown() {
   local text="\$1"
-  text=\$(printf "%s" "\$text" | sed 's/\\/\\\\/g') # 转义反斜杠
-  text=\$(printf "%s" "\$text" | sed 's/[]_{}`~>#+=|.!(){}\/-]/\\&/g') # 转义其他特殊字符
-  echo "\$text"
+  echo "\$text" | awk '{
+    gsub(/\\/, "\\\\\\\\");
+    gsub(/[]_{}`~>#+=|.!(){}\/-]/, "\\\\&");
+    print
+  }'
 }
+
 
 # 构建 Telegram 消息 (使用 MarkdownV2)
 message="*服务器名称:* \$(escape_markdown "\$server_name")%0A"
@@ -230,7 +233,7 @@ message+="*本月总流量:* \$(escape_markdown "\$(get_vnstat_info monthly)")%0
 message+="*总流量:* \$(escape_markdown "\$(get_vnstat_info total)")"
 
 # 转义 `-` 字符
-message=\$(printf "%s" "\$message" | sed 's/-/\\\\-/g')
+message=\$(echo "\$message" | sed 's/-/\\\\-/g')
 
 # 发送 Telegram 消息 (使用 MarkdownV2)
 response=\$(curl -s -X POST "https://api.telegram.org/bot\${TOKEN}/sendMessage" \
