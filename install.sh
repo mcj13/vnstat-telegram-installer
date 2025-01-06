@@ -224,7 +224,7 @@ escape_markdown() {
 }
 
 # 构建 Telegram 消息 (使用 MarkdownV2)
-local message
+declare message
 message="*服务器名称:* $(escape_markdown "$server_name")%0A"
 message+="*IP 地址:* $(escape_markdown "$ip_address")%0A"
 message+="*CPU 使用率:* $(escape_markdown "${cpu_usage}%")%0A"
