@@ -249,8 +249,8 @@ else
 fi
 EOF
 )
-    script_content=$(sed "s/TOKEN/$(echo "$TOKEN" | sed 's/["\/]/\\&/g')/g" <<< "$script_content")
-    script_content=$(sed "s/CHAT_ID/$(echo "$CHAT_ID" | sed 's/["\/]/\\&/g')/g" <<< "$script_content")
+    script_content=$(printf "%s" "$script_content" | sed "s/TOKEN/$(printf "%s" "$TOKEN" | sed 's/[\/&]/\\&/g')/g")
+    script_content=$(printf "%s" "$script_content" | sed "s/CHAT_ID/$(printf "%s" "$CHAT_ID" | sed 's/[\/&]/\\&/g')/g")
     printf "%s" "$script_content" > "$script_path"
     chmod +x "$script_path"
     if [[ $? -eq 0 ]]; then
@@ -260,7 +260,6 @@ EOF
         exit 1
     fi
 }
-
 
 # 函数：配置 crontab
 configure_crontab() {
