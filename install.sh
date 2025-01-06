@@ -153,7 +153,7 @@ deploy_script() {
     info "正在部署脚本到 $script_path..."
 
     # 构建脚本内容
-    local script_content=$(cat <<EOF
+    local script_content=$(cat <<'EOF'
 #!/bin/bash
 
 set -e
