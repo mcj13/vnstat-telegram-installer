@@ -50,12 +50,58 @@ verify_telegram_credentials() {
     read -p "请输入 Telegram Bot Token: " TOKEN
     read -p "请输入 Telegram 机器人聊天 ID: " CHAT_ID
 
+    # 基本验证 Bot Token 和 Chat ID
+    if [[ ! -n "$TOKEN" || ! -n "$CHAT_ID" ]]; then
+      error "Telegram Bot Token 和 Chat ID 不能为空！"
+      attempts=$((attempts+1))
+      if [[ $attempts -ge 3 ]]; then
+        error "验证失败次数过多，脚本退出。"
+        exit 1
+      fi
+      read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
+      if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
+        error "脚本退出。"
+        exit 1
+      fi
+      continue
+    fi
+
+    if [[ ${#TOKEN} -lt 45 ]]; then
+      error "Telegram Bot Token 无效！长度必须大于或等于 45 个字符。"
+      attempts=$((attempts+1))
+      if [[ $attempts -ge 3 ]]; then
+        error "验证失败次数过多，脚本退出。"
+        exit 1
+      fi
+      read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
+      if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
+        error "脚本退出。"
+        exit 1
+      fi
+      continue
+    fi
+
+    if ! [[ $CHAT_ID =~ ^[0-9]+$ ]]; then
+      error "Telegram Chat ID 无效！必须是数字。"
+      attempts=$((attempts+1))
+      if [[ $attempts -ge 3 ]]; then
+        error "验证失败次数过多，脚本退出。"
+        exit 1
+      fi
+      read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
+      if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
+        error "脚本退出。"
+        exit 1
+      fi
+      continue
+    fi
+
     response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/getMe")
     if echo "$response" | grep -q '"ok":true'; then
       info "Telegram Bot Token 和 Chat ID 验证成功!"
       break
     else
-      error "Telegram Bot Token 和 Chat ID 验证失败!"
+      error "Telegram Bot Token 和 Chat ID 验证失败！"
       error "错误信息: $response"
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
@@ -264,3 +310,4 @@ info "安装完成！"
 info "脚本已安装到 $script_path"
 info "日志文件已创建在 /var/log/vnstat_telegram.log"
 info "脚本将在每天早上 8 点运行。"
+
