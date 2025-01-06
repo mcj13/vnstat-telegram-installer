@@ -216,15 +216,12 @@ get_vnstat_info() {
 # 转义 MarkdownV2 特殊字符函数
 escape_markdown() {
   local text="$1"
-  printf "%s" "$text" | awk '{
-    gsub(/\\\\/, "\\\\\\\\");
-    gsub(/[\\_\`*\[\]\(\)\~\>\#\+\-\=\|\.\!\<\>\{\}\/]/, "\\\\&");
-    print
-  }'
+  text=$(echo "$text" | sed 's/\\/\\\\/g') # 转义反斜杠
+  text=$(echo "$text" | sed 's/[]_{}`~>#+=|.!(){}\/]/\\&/g') # 转义其他特殊字符
+  echo "$text"
 }
 
 # 构建 Telegram 消息 (使用 MarkdownV2)
-declare message
 message="*服务器名称:* $(escape_markdown "$server_name")%0A"
 message+="*IP 地址:* $(escape_markdown "$ip_address")%0A"
 message+="*CPU 使用率:* $(escape_markdown "${cpu_usage}%")%0A"
@@ -235,7 +232,7 @@ message+="*本月总流量:* $(escape_markdown "$(get_vnstat_info monthly)")%0A"
 message+="*总流量:* $(escape_markdown "$(get_vnstat_info total)")"
 
 # 转义 `-` 字符
-message=$(echo "$message" | sed 's/-/\\\\-/g')
+message=$(echo "$message" | sed 's/-/\\-/g')
 
 # 发送 Telegram 消息 (使用 MarkdownV2)
 response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
@@ -262,6 +259,7 @@ EOF
         exit 1
     fi
 }
+
 
 # 函数：配置 crontab
 configure_crontab() {
