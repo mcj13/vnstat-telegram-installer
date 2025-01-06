@@ -214,9 +214,9 @@ get_vnstat_info() {
 # 转义 MarkdownV2 特殊字符函数
 escape_markdown() {
   local text="\$1"
-  echo "\$text" | awk '{
-    gsub(/\\/, "\\\\\\\\");
-    gsub(/[]_{}`~>#+=|.!(){}\/-]/, "\\\\&");
+  printf "%s" "\$text" | awk '{
+    gsub(/\\\\/, "\\\\\\\\\\\\");
+    gsub(/[\\_\`*\[\]\(\)\~\>\#\+\-\=\|\.\!\<\>\{\}\/]/, "\\\\\\\\&");
     print
   }'
 }
@@ -258,6 +258,7 @@ EOF
         exit 1
     fi
 }
+
 
 # 函数：配置 crontab
 configure_crontab() {
