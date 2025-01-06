@@ -286,28 +286,40 @@ create_log_file() {
 # 主程序
 info "欢迎使用 vnstat_telegram 安装脚本！"
 
-# 1. 验证 Telegram Bot Token 和 Chat ID
-verify_telegram_credentials
+# 检测是否通过管道执行
+if [[ -t 0 ]]; then
+  # 不是管道执行，直接执行
+  info "脚本正在执行..."
+  # 1. 验证 Telegram Bot Token 和 Chat ID
+  verify_telegram_credentials
 
-# 2. 获取安装路径
-install_path=$(get_install_path)
+  # 2. 获取安装路径
+  install_path=$(get_install_path)
 
-# 3. 安装依赖
-install_dependency vnstat
-install_dependency bc
+  # 3. 安装依赖
+  install_dependency vnstat
+  install_dependency bc
 
-# 4. 部署脚本
-script_path="$install_path/vnstat_telegram.sh"
-deploy_script "$script_path"
+  # 4. 部署脚本
+  script_path="$install_path/vnstat_telegram.sh"
+  deploy_script "$script_path"
 
-# 5. 配置 crontab
-configure_crontab "$script_path"
+  # 5. 配置 crontab
+  configure_crontab "$script_path"
 
-# 6. 创建日志文件
-create_log_file
+  # 6. 创建日志文件
+  create_log_file
 
-info "安装完成！"
-info "脚本已安装到 $script_path"
-info "日志文件已创建在 /var/log/vnstat_telegram.log"
-info "脚本将在每天早上 8 点运行。"
-
+  info "安装完成！"
+  info "脚本已安装到 $script_path"
+  info "日志文件已创建在 /var/log/vnstat_telegram.log"
+  info "脚本将在每天早上 8 点运行。"
+else
+  # 是管道执行，下载到临时文件并执行
+  info "检测到管道执行，正在下载并执行..."
+  TEMP_SCRIPT="/tmp/vnstat_telegram_install.sh"
+  curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh > "$TEMP_SCRIPT"
+  chmod +x "$TEMP_SCRIPT"
+  "$TEMP_SCRIPT"
+  rm "$TEMP_SCRIPT"
+fi
