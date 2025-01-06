@@ -14,7 +14,7 @@
 
 1.  使用以下命令下载并执行脚本：
     ```bash
-    curl -sSL https://raw.githubusercontent.com/<你的用户名>/<你的仓库名>/main/install.sh | bash
+    curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh | bash
     ```
     **注意：** 请将 `<你的用户名>` 和 `<你的仓库名>` 替换为你的实际用户名和仓库名。
 2.  脚本将引导你完成安装过程，包括输入 Telegram Bot Token 和 Chat ID。
