@@ -154,7 +154,7 @@ deploy_script() {
 
     # 构建脚本内容
     local script_content
-    script_content=$(cat <<EOF
+    script_content=$(cat <<'EOF'
 #!/bin/bash
 
 set -e
@@ -169,45 +169,45 @@ CHAT_ID="$CHAT_ID"
 server_name=$(hostname)
 
 # 获取 IP 地址
-ip_address=$(ip addr | grep "inet " | grep -v "127.0.0.1" | awk '{print \$2}' | cut -d'/' -f1 | head -n 1)
+ip_address=$(ip addr | grep "inet " | grep -v "127.0.0.1" | awk '{print $2}' | cut -d'/' -f1 | head -n 1)
 
 # 获取 CPU 使用率
-cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - \$1}')
+cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
 
 # 获取内存使用率
-mem_usage=$(free -m | awk 'NR==2{printf "%.2f%%\n", \$3/\$2*100}')
+mem_usage=$(free -m | awk 'NR==2{printf "%.2f%%\n", $3/$2*100}')
 
 # 获取磁盘使用率
-disk_usage=$(df -h | awk '\$NF=="/"{printf "%s", \$5}' | sed 's/%//g')
+disk_usage=$(df -h | awk '$NF=="/"{printf "%s", $5}' | sed 's/%//g')
 
 # 获取 vnstat 信息函数
 get_vnstat_info() {
-    local type=\$1
+    local type="$1"
     local value
-    case \$type in
+    case "$type" in
         daily)
-            local rx=\$(vnstat -d | grep "\$(date +%Y-%m-%d)" | awk '{print \$2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=\$(vnstat -d | grep "\$(date +%Y-%m-%d)" | awk '{print \$5 * 1}' | sed 's/[^0-9.]*//g')
-            value=\$(echo "\$rx + \$tx" | bc)
+            local rx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $2 * 1}' | sed 's/[^0-9.]*//g')
+            local tx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $5 * 1}' | sed 's/[^0-9.]*//g')
+            value=$(echo "$rx + $tx" | bc)
             ;;
         monthly)
-            local rx=\$(vnstat -m | awk -v month=\$(date +%Y-%m) '\$1 == month {print \$2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=\$(vnstat -m | awk -v month=\$(date +%Y-%m) '\$1 == month {print \$5 * 1}' | sed 's/[^0-9.]*//g')
-            value=\$(echo "\$rx + \$tx" | bc)
+            local rx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $2 * 1}' | sed 's/[^0-9.]*//g')
+            local tx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $5 * 1}' | sed 's/[^0-9.]*//g')
+            value=$(echo "$rx + $tx" | bc)
             ;;
         total)
-            local rx=\$(vnstat -y | awk 'NR==6 {print \$2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=\$(vnstat -y | awk 'NR==6 {print \$5 * 1}' | sed 's/[^0-9.]*//g')
-            value=\$(echo "\$rx + \$tx" | bc)
+            local rx=$(vnstat -y | awk 'NR==6 {print $2 * 1}' | sed 's/[^0-9.]*//g')
+            local tx=$(vnstat -y | awk 'NR==6 {print $5 * 1}' | sed 's/[^0-9.]*//g')
+            value=$(echo "$rx + $tx" | bc)
             ;;
         *)
-            echo "Invalid type: \$type" >&2
+            echo "Invalid type: $type" >&2
             return 1
             ;;
     esac
-    if [[ -n "\$value" ]]; then
-        value=\$(echo "\$value * 1024 * 1024 / (1024 * 1024)" | bc)
-        printf "%.2fMB" "\$value"
+    if [[ -n "$value" ]]; then
+        value=$(echo "$value * 1024 * 1024 / (1024 * 1024)" | bc)
+        printf "%.2fMB" "$value"
     else
       echo "N/A"
     fi
@@ -215,48 +215,59 @@ get_vnstat_info() {
 
 # 转义 MarkdownV2 特殊字符函数
 escape_markdown() {
-  local text="\$1"
-  text=\$(echo "\$text" | sed 's/\\\\/\\\\\\\\/g') # 转义反斜杠
-  text=\$(echo "\$text" | sed 's/[]_{}`~>#+=|.!(){}\/]/\\\\&/g') # 转义其他特殊字符
-  echo "\$text"
+  local text="$1"
+  text=$(echo "$text" | sed 's/\\/\\\\/g') # 转义反斜杠
+  text=$(echo "$text" | sed 's/[]_{}`~>#+=|.!(){}\/]/\\&/g') # 转义其他特殊字符
+  echo "$text"
 }
 
 # 构建 Telegram 消息 (使用 MarkdownV2)
-message="*服务器名称:* \$(escape_markdown \"\$server_name\")%0A"
-message+="*IP 地址:* \$(escape_markdown \"\$ip_address\")%0A"
-message+="*CPU 使用率:* \$(escape_markdown \"\${cpu_usage}%\")%0A"
-message+="*内存使用率:* \$(escape_markdown \"\${mem_usage}\")%0A"
-message+="*磁盘使用率:* \$(escape_markdown \"\${disk_usage}%\")%0A"
-message+="*今日总流量:* \$(escape_markdown \"\$(get_vnstat_info daily)\")%0A"
-message+="*本月总流量:* \$(escape_markdown \"\$(get_vnstat_info monthly)\")%0A"
-message+="*总流量:* \$(escape_markdown \"\$(get_vnstat_info total)\")"
+message="*服务器名称:* $(escape_markdown "$server_name")%0A"
+message+="*IP 地址:* $(escape_markdown "$ip_address")%0A"
+message+="*CPU 使用率:* $(escape_markdown "${cpu_usage}%")%0A"
+message+="*内存使用率:* $(escape_markdown "${mem_usage}")%0A"
+message+="*磁盘使用率:* $(escape_markdown "${disk_usage}%")%0A"
+message+="*今日总流量:* $(escape_markdown "$(get_vnstat_info daily)")%0A"
+message+="*本月总流量:* $(escape_markdown "$(get_vnstat_info monthly)")%0A"
+message+="*总流量:* $(escape_markdown "$(get_vnstat_info total)")"
 
 # 转义 `-` 字符
-message=\$(echo "\$message" | sed 's/-/\\\\-/g')
+message=$(echo "$message" | sed 's/-/\\-/g')
 
 # 发送 Telegram 消息 (使用 MarkdownV2)
-response=\$(curl -s -X POST "https://api.telegram.org/bot\${TOKEN}/sendMessage" \
-    -d "chat_id=\${CHAT_ID}" \
-    -d "text=\${message}" \
+response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
+    -d "chat_id=${CHAT_ID}" \
+    -d "text=${message}" \
     -d "parse_mode=MarkdownV2")
 
 # 检查 Telegram API 返回结果
-if echo "\$response" | grep -q '"ok":true'; then
+if echo "$response" | grep -q '"ok":true'; then
     echo "Telegram 消息发送成功!"
 else
     echo "Telegram 消息发送失败!"
-    echo "错误信息: \$response"
+    echo "错误信息: $response"
 fi
 EOF
 )
-    script_content=$(printf "%s" "$script_content" | sed "s/TOKEN/$(printf "%s" "$TOKEN" | sed 's/[\/&]/\\&/g')/g")
-    script_content=$(printf "%s" "$script_content" | sed "s/CHAT_ID/$(printf "%s" "$CHAT_ID" | sed 's/[\/&]/\\&/g')/g")
+
     printf "%s" "$script_content" > "$script_path"
     chmod +x "$script_path"
     if [[ $? -eq 0 ]]; then
         info "脚本部署成功！"
     else
         error "脚本部署失败！"
+        exit 1
+    fi
+}
+
+# 函数：配置 crontab
+configure_crontab() {
+    info "正在配置 crontab..."
+    (crontab -l 2>/dev/null; echo "*/5 * * * * $1") | crontab -
+    if [[ $? -eq 0 ]]; then
+        info "crontab 配置成功！"
+    else
+        error "crontab 配置失败！"
         exit 1
     fi
 }
