@@ -286,9 +286,9 @@ create_log_file() {
 # 主程序
 info "欢迎使用 vnstat_telegram 安装脚本！"
 
-# 检测是否通过管道执行
+# 检测是否为交互式终端
 if [[ -t 0 ]]; then
-  # 不是管道执行，直接执行
+  # 是交互式终端，直接执行
   info "脚本正在执行..."
   # 1. 验证 Telegram Bot Token 和 Chat ID
   verify_telegram_credentials
@@ -315,11 +315,12 @@ if [[ -t 0 ]]; then
   info "日志文件已创建在 /var/log/vnstat_telegram.log"
   info "脚本将在每天早上 8 点运行。"
 else
-  # 是管道执行，下载到临时文件并执行
-  info "检测到管道执行，正在下载并执行..."
-  TEMP_SCRIPT="/tmp/vnstat_telegram_install.sh"
-  curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh > "$TEMP_SCRIPT"
-  chmod +x "$TEMP_SCRIPT"
-  "$TEMP_SCRIPT"
-  rm "$TEMP_SCRIPT"
+  # 不是交互式终端，提示用户下载并执行
+  error "检测到非交互式执行 (例如管道执行)。"
+  error "请使用以下命令下载脚本并手动执行："
+  echo
+  echo "  curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh -o install.sh"
+  echo "  bash install.sh"
+  echo
+  exit 1
 fi
