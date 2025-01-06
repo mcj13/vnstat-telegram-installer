@@ -45,17 +45,30 @@ install_dependency() {
 
 # 函数：验证 Telegram Bot Token 和 Chat ID
 verify_telegram_credentials() {
+  local attempts=0
+  while true; do
     read -p "请输入 Telegram Bot Token: " TOKEN
     read -p "请输入 Telegram 机器人聊天 ID: " CHAT_ID
 
     response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/getMe")
     if echo "$response" | grep -q '"ok":true'; then
-        info "Telegram Bot Token 和 Chat ID 验证成功!"
+      info "Telegram Bot Token 和 Chat ID 验证成功!"
+      break
     else
-        error "Telegram Bot Token 和 Chat ID 验证失败!"
-        error "错误信息: $response"
+      error "Telegram Bot Token 和 Chat ID 验证失败!"
+      error "错误信息: $response"
+      attempts=$((attempts+1))
+      if [[ $attempts -ge 3 ]]; then
+        error "验证失败次数过多，脚本退出。"
         exit 1
+      fi
+      read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
+      if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
+        error "脚本退出。"
+        exit 1
+      fi
     fi
+  done
 }
 
 # 函数：获取安装路径
