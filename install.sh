@@ -153,102 +153,102 @@ deploy_script() {
     info "正在部署脚本到 $script_path..."
 
     # 构建脚本内容
-    local script_content='#!/bin/bash
-
-set -e
-
-# Telegram Bot API 令牌
-TOKEN="'"$TOKEN"'"
-
-# Telegram 机器人聊天 ID
-CHAT_ID="'"$CHAT_ID"'"
-
-# 获取服务器名称
-server_name=$(hostname)
-
-# 获取 IP 地址
-ip_address=$(ip addr | grep "inet " | grep -v "127.0.0.1" | awk "{print \$2}" | cut -d"/" -f1 | head -n 1)
-
-# 获取 CPU 使用率
-cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk "{print 100 - \$1}")
-
-# 获取内存使用率
-mem_usage=$(free -m | awk \'NR==2{printf "%.2f%%\n", \$3/\$2*100}\')
-
-# 获取磁盘使用率
-disk_usage=$(df -h | awk \'\$NF=="/"{printf "%s", \$5}\' | sed \'s/%//g\')
-
-# 获取 vnstat 信息函数
-get_vnstat_info() {
-    local type="$1"
-    local value
-    case "$type" in
-        daily)
-            local rx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk "{print \$2 * 1}" | sed "s/[^0-9.]*//g")
-            local tx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk "{print \$5 * 1}" | sed "s/[^0-9.]*//g")
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        monthly)
-            local rx=$(vnstat -m | awk -v month=$(date +%Y-%m) '\$1 == month {print \$2 * 1}' | sed "s/[^0-9.]*//g")
-            local tx=$(vnstat -m | awk -v month=$(date +%Y-%m) '\$1 == month {print \$5 * 1}' | sed "s/[^0-9.]*//g")
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        total)
-            local rx=$(vnstat -y | awk \'NR==6 {print \$2 * 1}\' | sed "s/[^0-9.]*//g")
-            local tx=$(vnstat -y | awk \'NR==6 {print \$5 * 1}\' | sed "s/[^0-9.]*//g")
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        *)
-            echo "Invalid type: $type" >&2
-            return 1
-            ;;
-    esac
-    if [[ -n "$value" ]]; then
-        value=$(echo "$value * 1024 * 1024 / (1024 * 1024)" | bc)
-        printf "%.2fMB" "$value"
-    else
-      echo "N/A"
-    fi
-}
-
-# 转义 MarkdownV2 特殊字符函数
-escape_markdown() {
-  local text="$1"
-  printf "%s" "$text" | awk \'{
-    gsub(/\\\\/, "\\\\\\\\\\\\");
-    gsub(/[\\_\`*\[\]\(\)\~\>\#\+\-\=\|\.\!\<\>\{\}\/]/, "\\\\\\\\&");
-    print
-  }\'
-}
-
-
-# 构建 Telegram 消息 (使用 MarkdownV2)
-local message
-message="*服务器名称:* $(escape_markdown "$server_name")%0A"
-message+="*IP 地址:* $(escape_markdown "$ip_address")%0A"
-message+="*CPU 使用率:* $(escape_markdown "${cpu_usage}%")%0A"
-message+="*内存使用率:* $(escape_markdown "${mem_usage}")%0A"
-message+="*磁盘使用率:* $(escape_markdown "${disk_usage}%")%0A"
-message+="*今日总流量:* $(escape_markdown "$(get_vnstat_info daily)")%0A"
-message+="*本月总流量:* $(escape_markdown "$(get_vnstat_info monthly)")%0A"
-message+="*总流量:* $(escape_markdown "$(get_vnstat_info total)")"
-
-# 转义 `-` 字符
-message=$(echo "$message" | sed \'s/-/\\\\-/g\')
-
-# 发送 Telegram 消息 (使用 MarkdownV2)
-response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-    -d "chat_id=${CHAT_ID}" \
-    -d "text=${message}" \
-    -d "parse_mode=MarkdownV2")
-
-# 检查 Telegram API 返回结果
-if echo "$response" | grep -q \'"ok":true\'; then
-    echo "Telegram 消息发送成功!"
-else
-    echo "Telegram 消息发送失败!"
-    echo "错误信息: $response"
-fi
+    local script_content=$'#!/bin/bash\n\
+\n\
+set -e\n\
+\n\
+# Telegram Bot API 令牌\n\
+TOKEN="'"$TOKEN"'"\n\
+\n\
+# Telegram 机器人聊天 ID\n\
+CHAT_ID="'"$CHAT_ID"'"\n\
+\n\
+# 获取服务器名称\n\
+server_name=$(hostname)\n\
+\n\
+# 获取 IP 地址\n\
+ip_address=$(ip addr | grep "inet " | grep -v "127.0.0.1" | awk "{print \\$2}" | cut -d"/" -f1 | head -n 1)\n\
+\n\
+# 获取 CPU 使用率\n\
+cpu_usage=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk "{print 100 - \\$1}")\n\
+\n\
+# 获取内存使用率\n\
+mem_usage=$(free -m | awk \'NR==2{printf "%.2f%%\\n", \\$3/\\$2*100}\')\n\
+\n\
+# 获取磁盘使用率\n\
+disk_usage=$(df -h | awk \'\\$NF=="/"{printf "%s", \\$5}\' | sed \'s/%//g\')\n\
+\n\
+# 获取 vnstat 信息函数\n\
+get_vnstat_info() {\n\
+    local type="$1"\n\
+    local value\n\
+    case "$type" in\n\
+        daily)\n\
+            local rx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk "{print \\$2 * 1}" | sed "s/[^0-9.]*//g")\n\
+            local tx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk "{print \\$5 * 1}" | sed "s/[^0-9.]*//g")\n\
+            value=$(echo "$rx + $tx" | bc)\n\
+            ;;\n\
+        monthly)\n\
+            local rx=$(vnstat -m | awk -v month=$(date +%Y-%m) \'\\$1 == month {print \\$2 * 1}\' | sed "s/[^0-9.]*//g")\n\
+            local tx=$(vnstat -m | awk -v month=$(date +%Y-%m) \'\\$1 == month {print \\$5 * 1}\' | sed "s/[^0-9.]*//g")\n\
+            value=$(echo "$rx + $tx" | bc)\n\
+            ;;\n\
+        total)\n\
+            local rx=$(vnstat -y | awk \'NR==6 {print \\$2 * 1}\' | sed "s/[^0-9.]*//g")\n\
+            local tx=$(vnstat -y | awk \'NR==6 {print \\$5 * 1}\' | sed "s/[^0-9.]*//g")\n\
+            value=$(echo "$rx + $tx" | bc)\n\
+            ;;\n\
+        *)\n\
+            echo "Invalid type: $type" >&2\n\
+            return 1\n\
+            ;;\n\
+    esac\n\
+    if [[ -n "$value" ]]; then\n\
+        value=$(echo "$value * 1024 * 1024 / (1024 * 1024)" | bc)\n\
+        printf "%.2fMB" "$value"\n\
+    else\n\
+      echo "N/A"\n\
+    fi\n\
+}\n\
+\n\
+# 转义 MarkdownV2 特殊字符函数\n\
+escape_markdown() {\n\
+  local text="$1"\n\
+  printf "%s" "$text" | awk \'{\n\
+    gsub(/\\\\/, "\\\\\\\\\\\\");\n\
+    gsub(/[\\\\_\\`*\\[\\]\\(\\)\\~\\>\\#\\+\\-\\=\\|\\.\\!\\<\\>\\{\\}\\/]/, "\\\\\\\\&");\n\
+    print\n\
+  }\'\n\
+}\n\
+\n\
+\n\
+# 构建 Telegram 消息 (使用 MarkdownV2)\n\
+local message\n\
+message="*服务器名称:* $(escape_markdown "$server_name")%0A"\n\
+message+="*IP 地址:* $(escape_markdown "$ip_address")%0A"\n\
+message+="*CPU 使用率:* $(escape_markdown "${cpu_usage}%")%0A"\n\
+message+="*内存使用率:* $(escape_markdown "${mem_usage}")%0A"\n\
+message+="*磁盘使用率:* $(escape_markdown "${disk_usage}%")%0A"\n\
+message+="*今日总流量:* $(escape_markdown "$(get_vnstat_info daily)")%0A"\n\
+message+="*本月总流量:* $(escape_markdown "$(get_vnstat_info monthly)")%0A"\n\
+message+="*总流量:* $(escape_markdown "$(get_vnstat_info total)")"\n\
+\n\
+# 转义 `-` 字符\n\
+message=$(echo "$message" | sed \'s/-/\\\\-/g\')\n\
+\n\
+# 发送 Telegram 消息 (使用 MarkdownV2)\n\
+response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \\\n\
+    -d "chat_id=${CHAT_ID}" \\\n\
+    -d "text=${message}" \\\n\
+    -d "parse_mode=MarkdownV2")\n\
+\n\
+# 检查 Telegram API 返回结果\n\
+if echo "$response" | grep -q \'"ok":true\'; then\n\
+    echo "Telegram 消息发送成功!"\n\
+else\n\
+    echo "Telegram 消息发送失败!"\n\
+    echo "错误信息: $response"\n\
+fi\n\
 '
 
     printf "%s" "$script_content" > "$script_path"
