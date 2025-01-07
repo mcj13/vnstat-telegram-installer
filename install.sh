@@ -44,10 +44,10 @@ install_dependency() {
     if ! command_exists "$package"; then
         info "正在安装 $package..."
         if command_exists apt-get; then
-            sudo apt-get update
-            sudo apt-get install -y "$package"
+            apt-get update
+            apt-get install -y "$package"
         elif command_exists yum; then
-            sudo yum install -y "$package"
+            yum install -y "$package"
         else
             error "无法找到 apt-get 或 yum，请手动安装 $package"
         fi
@@ -139,7 +139,7 @@ get_install_path() {
 是否创建该目录？(y/n) "
         read create_dir
         if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
-            sudo mkdir -p "$install_path"
+            mkdir -p "$install_path"
             if [[ ! -d "$install_path" ]]; then
               error "创建目录 $install_path 失败！"
             fi
@@ -314,7 +314,7 @@ check_network_connection() {
 }
 
 # 主程序
-info "欢迎使用 vnstat_telegram 安装脚本！"
+info '欢迎使用 vnstat_telegram 安装脚本！'
 
 # 检测是否为交互式终端
 if [[ -t 0 ]]; then
@@ -324,46 +324,37 @@ if [[ -t 0 ]]; then
   # 1. 检查用户权限
   info "检查用户权限..."
   if [ "$(id -u)" -ne 0 ]; then
-    error "请以 root 用户或使用 sudo 运行此脚本。"
+    error "请以 root 用户或使用 su - 切换到 root 用户后重新运行此脚本。"
   fi
 
-  # 2. 检查 `sudo` 是否存在
-  info "检查 sudo 是否存在..."
-  if ! command_exists sudo; then
-    error "sudo 命令未找到。请确保您以 root 用户运行此脚本。
-如果您确实需要安装 sudo，请按照以下步骤操作：
-1. 切换到 root 用户：`su -`
-2. 安装 sudo：`apt-get install sudo` 或 `yum install sudo`"
-  fi
-
-  # 3. 检查网络连接
+  # 2. 检查网络连接
   info "检查网络连接..."
   check_network_connection
 
-  # 4. 获取安装路径
+  # 3. 获取安装路径
   info "获取安装路径..."
   install_path=$(get_install_path)
 
-  # 5. 安装依赖
+  # 4. 安装依赖
   info "安装依赖..."
   install_dependency vnstat
   install_dependency bc
   install_dependency curl
 
-  # 6. 验证 Telegram Bot Token 和 Chat ID
+  # 5. 验证 Telegram Bot Token 和 Chat ID
   info "验证 Telegram Bot Token 和 Chat ID..."
   verify_telegram_credentials
 
-  # 7. 部署脚本
+  # 6. 部署脚本
   info "部署脚本..."
   script_path="$install_path/vnstat_telegram.sh"
   deploy_script "$script_path"
 
-  # 8. 配置 crontab
+  # 7. 配置 crontab
   info "配置 crontab..."
   configure_crontab "$script_path"
 
-  # 9. 创建日志文件
+  # 8. 创建日志文件
   info "创建日志文件..."
   create_log_file
 
