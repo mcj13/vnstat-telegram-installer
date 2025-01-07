@@ -31,25 +31,25 @@ command_exists() {
 
 # 函数：安装依赖
 install_dependency() {
-    local package="$1"
-    if ! command_exists "$package"; then
-        info "正在安装 $package..."
-        if command_exists apt-get; then
-            sudo apt-get update
-            sudo apt-get install -y "$package"
-        elif command_exists yum; then
-            sudo yum install -y "$package"
-        else
-            error "无法找到 apt-get 或 yum，请手动安装 $package
-错误信息: $!"
-        fi
-        if ! command_exists "$package"; then
-            error "$package 安装失败！
-错误信息: $!"
-        fi
+  local package="$1"
+  if ! command_exists "$package"; then
+    info "正在安装 $package..."
+    if command_exists apt-get; then
+      sudo apt-get update
+      sudo apt-get install -y "$package"
+    elif command_exists yum; then
+      sudo yum install -y "$package"
     else
-        info "$package 已安装。"
+      error "无法找到 apt-get 或 yum，请手动安装 $package
+错误信息: $!"
     fi
+    if ! command_exists "$package"; then
+      error "$package 安装失败！
+错误信息: $!"
+    fi
+  else
+    info "$package 已安装。"
+  fi
 }
 
 # 函数：验证 Telegram Bot Token 和 Chat ID
@@ -60,7 +60,7 @@ verify_telegram_credentials() {
     read -p "请输入 Telegram 机器人聊天 ID: " CHAT_ID
 
     # 基本验证 Bot Token 和 Chat ID
-    if [[ ! -n "$TOKEN" || ! -n "$CHAT_ID" ]]; then
+    if [[ -z "$TOKEN" || -z "$CHAT_ID" ]]; then
       error "Telegram Bot Token 和 Chat ID 不能为空！"
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
@@ -120,42 +120,42 @@ verify_telegram_credentials() {
 
 # 函数：获取安装路径
 get_install_path() {
-    read -p "请输入安装路径（默认为 /usr/local/bin/）: " install_path
-    if [[ -z "$install_path" ]]; then
-        install_path="/usr/local/bin/"
-    fi
+  read -p "请输入安装路径（默认为 /usr/local/bin/）: " install_path
+  if [[ -z "$install_path" ]]; then
+    install_path="/usr/local/bin/"
+  fi
 
-    if [[ ! -d "$install_path" ]]; then
-        error "安装路径 $install_path 不存在！
+  if [[ ! -d "$install_path" ]]; then
+    error "安装路径 $install_path 不存在！
 是否创建该目录？(y/n) "
-        read create_dir
-        if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
-            sudo mkdir -p "$install_path"
-            if [[ ! -d "$install_path" ]]; then
-              error "创建目录 $install_path 失败！
+    read create_dir
+    if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
+      sudo mkdir -p "$install_path"
+      if [[ ! -d "$install_path" ]]; then
+        error "创建目录 $install_path 失败！
 错误信息: $!"
-            fi
-            info "目录 $install_path 创建成功！"
-        else
-          error "安装路径无效，请重新运行脚本并输入有效的安装路径！"
-        fi
+      fi
+      info "目录 $install_path 创建成功！"
+    else
+      error "安装路径无效，请重新运行脚本并输入有效的安装路径！"
     fi
+  fi
 
-    if [[ ! -w "$install_path" ]]; then
-      error "安装路径 $install_path 没有写入权限！
+  if [[ ! -w "$install_path" ]]; then
+    error "安装路径 $install_path 没有写入权限！
 错误信息: $!"
-    fi
-    echo "$install_path"
+  fi
+  echo "$install_path"
 }
 
 # 函数：部署脚本
 deploy_script() {
-    local script_path="$1"
-    info "正在部署脚本到 $script_path..."
+  local script_path="$1"
+  info "正在部署脚本到 $script_path..."
 
-    # 构建脚本内容
-    local script_content
-    script_content=$(cat <<'EOF'
+  # 构建脚本内容
+  local script_content
+  script_content=$(cat <<'EOF'
 #!/bin/bash
 
 set -e
@@ -183,35 +183,35 @@ disk_usage=$(df -h | awk '$NF=="/"{printf "%s", $5}' | sed 's/%//g')
 
 # 获取 vnstat 信息函数
 get_vnstat_info() {
-    local type="$1"
-    local value
-    case "$type" in
-        daily)
-            local rx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $5 * 1}' | sed 's/[^0-9.]*//g')
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        monthly)
-            local rx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $5 * 1}' | sed 's/[^0-9.]*//g')
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        total)
-            local rx=$(vnstat -y | awk 'NR==6 {print $2 * 1}' | sed 's/[^0-9.]*//g')
-            local tx=$(vnstat -y | awk 'NR==6 {print $5 * 1}' | sed 's/[^0-9.]*//g')
-            value=$(echo "$rx + $tx" | bc)
-            ;;
-        *)
-            echo "Invalid type: $type" >&2
-            return 1
-            ;;
-    esac
-    if [[ -n "$value" ]]; then
-        value=$(echo "$value * 1024 * 1024 / (1024 * 1024)" | bc)
-        printf "%.2fMB" "$value"
-    else
-      echo "N/A"
-    fi
+  local type="$1"
+  local value
+  case "$type" in
+    daily)
+      local rx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $2 * 1}' | sed 's/[^0-9.]*//g')
+      local tx=$(vnstat -d | grep "$(date +%Y-%m-%d)" | awk '{print $5 * 1}' | sed 's/[^0-9.]*//g')
+      value=$(echo "$rx + $tx" | bc)
+      ;;
+    monthly)
+      local rx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $2 * 1}' | sed 's/[^0-9.]*//g')
+      local tx=$(vnstat -m | awk -v month=$(date +%Y-%m) '$1 == month {print $5 * 1}' | sed 's/[^0-9.]*//g')
+      value=$(echo "$rx + $tx" | bc)
+      ;;
+    total)
+      local rx=$(vnstat -y | awk 'NR==6 {print $2 * 1}' | sed 's/[^0-9.]*//g')
+      local tx=$(vnstat -y | awk 'NR==6 {print $5 * 1}' | sed 's/[^0-9.]*//g')
+      value=$(echo "$rx + $tx" | bc)
+      ;;
+    *)
+      echo "Invalid type: $type" >&2
+      return 1
+      ;;
+  esac
+  if [[ -n "$value" ]]; then
+    value=$(echo "$value * 1024 * 1024 / (1024 * 1024)" | bc)
+    printf "%.2fMB" "$value"
+  else
+    echo "N/A"
+  fi
 }
 
 # 转义 MarkdownV2 特殊字符函数
@@ -237,83 +237,83 @@ message=$(echo "$message" | sed 's/-/\\-/g')
 
 # 发送 Telegram 消息 (使用 MarkdownV2)
 response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-    -d "chat_id=${CHAT_ID}" \
-    -d "text=${message}" \
-    -d "parse_mode=MarkdownV2")
+  -d "chat_id=${CHAT_ID}" \
+  -d "text=${message}" \
+  -d "parse_mode=MarkdownV2")
 
 # 检查 Telegram API 返回结果
 if echo "$response" | grep -q '"ok":true'; then
-    echo "Telegram 消息发送成功!"
+  echo "Telegram 消息发送成功!"
 else
-    echo "Telegram 消息发送失败!
+  echo "Telegram 消息发送失败!
 错误信息: $response"
 fi
 EOF
 )
 
-    # 替换 TOKEN 和 CHAT_ID 变量
-    script_content=$(printf "%s" "$script_content" | sed "s/TOKEN=\"\"/TOKEN=\"$TOKEN\"/g")
-    script_content=$(printf "%s" "$script_content" | sed "s/CHAT_ID=\"\"/CHAT_ID=\"$CHAT_ID\"/g")
+  # 替换 TOKEN 和 CHAT_ID 变量
+  script_content=$(printf "%s" "$script_content" | sed "s/TOKEN=\"\"/TOKEN=\"$TOKEN\"/g")
+  script_content=$(printf "%s" "$script_content" | sed "s/CHAT_ID=\"\"/CHAT_ID=\"$CHAT_ID\"/g")
 
-    # 写入脚本文件
-    printf "%s" "$script_content" > "$script_path"
-    chmod +x "$script_path"
-    if [[ $? -eq 0 ]]; then
-        info "脚本部署成功！"
-    else
-        error "脚本部署失败！
+  # 写入脚本文件
+  printf "%s" "$script_content" > "$script_path"
+  chmod +x "$script_path"
+  if [[ $? -eq 0 ]]; then
+    info "脚本部署成功！"
+  else
+    error "脚本部署失败！
 错误信息: $!"
-    fi
+  fi
 }
 
 # 函数：配置 crontab
 configure_crontab() {
-    local script_path="$1"
-    local cron_time="$2"
-    info "正在配置 crontab..."
+  local script_path="$1"
+  local cron_time="$2"
+  info "正在配置 crontab..."
 
-    # 删除已存在的任务
-    crontab -l | grep -v "$script_path" | crontab -
+  # 删除已存在的任务
+  crontab -l | grep -v "$script_path" | crontab -
 
-    # 添加新的 crontab 任务
-    (crontab -l 2>/dev/null; echo "$cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
-    if [[ $? -eq 0 ]]; then
-        info "crontab 配置成功！"
-    else
-        error "crontab 配置失败！
+  # 添加新的 crontab 任务
+  (crontab -l 2>/dev/null; echo "$cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
+  if [[ $? -eq 0 ]]; then
+    info "crontab 配置成功！"
+  else
+    error "crontab 配置失败！
 错误信息: $!"
-    fi
+  fi
 }
 
 # 函数：验证时间格式
 validate_cron_time() {
-    local cron_time="$1"
-    if ! [[ "$cron_time" =~ ^([0-5]?[0-9]) ([0-2]?[0-9])$ ]]; then
-        error "时间格式不正确，请输入正确的 MINUTE HOUR 格式（例如 0 8）。"
-    fi
+  local cron_time="$1"
+  if ! [[ "$cron_time" =~ ^([0-5]?[0-9]) ([0-2]?[0-9])$ ]]; then
+    error "时间格式不正确，请输入正确的 MINUTE HOUR 格式（例如 0 8）。"
+  fi
 }
 
 # 函数：创建日志文件
 create_log_file() {
-    info "正在创建日志文件..."
-    touch /var/log/vnstat_telegram.log
-    if [[ $? -eq 0 ]]; then
-        info "日志文件创建成功！"
-    else
-        error "日志文件创建失败！
+  info "正在创建日志文件..."
+  touch /var/log/vnstat_telegram.log
+  if [[ $? -eq 0 ]]; then
+    info "日志文件创建成功！"
+  else
+    error "日志文件创建失败！
 错误信息: $!"
-    fi
+  fi
 }
 
 # 函数：检查网络连接
 check_network_connection() {
-    info "正在检查网络连接..."
-    if ping -c 1 google.com &> /dev/null; then
-        info "网络连接正常。"
-    else
-        error "网络连接失败！请检查网络设置。
+  info "正在检查网络连接..."
+  if ping -c 1 google.com &> /dev/null; then
+    info "网络连接正常。"
+  else
+    error "网络连接失败！请检查网络设置。
 错误信息: $!"
-    fi
+  fi
 }
 
 # 主程序
