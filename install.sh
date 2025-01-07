@@ -105,8 +105,8 @@ verify_telegram_credentials() {
       info "Telegram Bot Token 和 Chat ID 验证成功!"
       break
     else
-      error "Telegram Bot Token 和 Chat ID 验证失败！"
-      error "错误信息: $response"
+      error "Telegram Bot Token 和 Chat ID 验证失败！
+错误信息: $response"
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
         error "验证失败次数过多，脚本退出。"
@@ -129,8 +129,9 @@ get_install_path() {
     fi
 
     if [[ ! -d "$install_path" ]]; then
-        error "安装路径 $install_path 不存在！"
-        read -p "是否创建该目录？(y/n) " create_dir
+        error "安装路径 $install_path 不存在！
+是否创建该目录？(y/n) "
+        read create_dir
         if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
             sudo mkdir -p "$install_path"
             if [[ ! -d "$install_path" ]]; then
@@ -248,8 +249,8 @@ response=$(curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
 if echo "$response" | grep -q '"ok":true'; then
     echo "Telegram 消息发送成功!"
 else
-    echo "Telegram 消息发送失败!"
-    echo "错误信息: $response"
+    echo "Telegram 消息发送失败!
+错误信息: $response"
 fi
 EOF
 )
@@ -360,10 +361,10 @@ if [[ -t 0 ]]; then
   # 9. 创建日志文件
   create_log_file
 
-  info "安装完成！"
-  info "脚本已安装到 $script_path"
-  info "日志文件已创建在 /var/log/vnstat_telegram.log"
-  info "脚本将在每天早上 8 点运行。"
+  info "安装完成！
+脚本已安装到 $script_path
+日志文件已创建在 /var/log/vnstat_telegram.log
+脚本将在每天早上 8 点运行。"
 else
   # 不是交互式终端，提示用户下载并执行
   error "检测到非交互式执行 (例如管道执行)。
