@@ -9,33 +9,17 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 # 函数：输出带颜色的信息
-info() {
-  echo -e "${GREEN}$1${NC}"
-  echo "INFO: $1"
-}
-
-warn() { 
-  echo -e "${YELLOW}$1${NC}"
-  echo "WARN: $1"
-}
-
+info() { echo -e "${GREEN}$1${NC}"; }
+warn() { echo -e "${YELLOW}$1${NC}"; }
 error() { 
   while IFS= read -r line; do
     echo -e "${RED}$line${NC}"
-    echo "ERROR: $line"
   done <<< "$1"
-  exit 1
 }
 
 # 函数：检查命令是否存在
 command_exists() {
-  echo "DEBUG: Checking if $1 exists..."
   command -v "$1" >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "DEBUG: $1 exists."
-  else
-    echo "DEBUG: $1 does not exist."
-  fi
 }
 
 # 函数：安装依赖
@@ -44,17 +28,19 @@ install_dependency() {
     if ! command_exists "$package"; then
         info "正在安装 $package..."
         if command_exists apt-get; then
-            apt-get update
-            apt-get install -y "$package"
+            sudo apt-get update
+            sudo apt-get install -y "$package"
         elif command_exists yum; then
-            yum install -y "$package"
+            sudo yum install -y "$package"
         else
             error "无法找到 apt-get 或 yum，请手动安装 $package"
+            exit 1
         fi
         if command_exists "$package"; then
             info "$package 安装成功！"
         else
             error "$package 安装失败！"
+            exit 1
         fi
     else
         info "$package 已安装。"
@@ -74,10 +60,12 @@ verify_telegram_credentials() {
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
         error "验证失败次数过多，脚本退出。"
+        exit 1
       fi
       read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
       if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
         error "脚本退出。"
+        exit 1
       fi
       continue
     fi
@@ -87,10 +75,12 @@ verify_telegram_credentials() {
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
         error "验证失败次数过多，脚本退出。"
+        exit 1
       fi
       read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
       if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
         error "脚本退出。"
+        exit 1
       fi
       continue
     fi
@@ -100,10 +90,12 @@ verify_telegram_credentials() {
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
         error "验证失败次数过多，脚本退出。"
+        exit 1
       fi
       read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
       if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
         error "脚本退出。"
+        exit 1
       fi
       continue
     fi
@@ -118,10 +110,12 @@ verify_telegram_credentials() {
       attempts=$((attempts+1))
       if [[ $attempts -ge 3 ]]; then
         error "验证失败次数过多，脚本退出。"
+        exit 1
       fi
       read -p "是否重新输入 Telegram Bot Token 和 Chat ID？(y/n) " retry
       if [[ "$retry" != "y" && "$retry" != "Y" ]]; then
         error "脚本退出。"
+        exit 1
       fi
     fi
   done
@@ -139,18 +133,21 @@ get_install_path() {
 是否创建该目录？(y/n) "
         read create_dir
         if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
-            mkdir -p "$install_path"
+            sudo mkdir -p "$install_path"
             if [[ ! -d "$install_path" ]]; then
               error "创建目录 $install_path 失败！"
+              exit 1
             fi
             info "目录 $install_path 创建成功！"
         else
           error "安装路径无效，请重新运行脚本并输入有效的安装路径！"
+          exit 1
         fi
     fi
 
     if [[ ! -w "$install_path" ]]; then
       error "安装路径 $install_path 没有写入权限！"
+      exit 1
     fi
     echo "$install_path"
 }
@@ -269,6 +266,7 @@ EOF
         info "脚本部署成功！"
     else
         error "脚本部署失败！"
+        exit 1
     fi
 }
 
@@ -289,6 +287,7 @@ configure_crontab() {
         info "crontab 配置成功！"
     else
         error "crontab 配置失败！"
+        exit 1
     fi
 }
 
@@ -300,6 +299,7 @@ create_log_file() {
         info "日志文件创建成功！"
     else
         error "日志文件创建失败！"
+        exit 1
     fi
 }
 
@@ -310,11 +310,12 @@ check_network_connection() {
         info "网络连接正常。"
     else
         error "网络连接失败！请检查网络设置。"
+        exit 1
     fi
 }
 
 # 主程序
-info '欢迎使用 vnstat_telegram 安装脚本！'
+info "欢迎使用 vnstat_telegram 安装脚本！"
 
 # 检测是否为交互式终端
 if [[ -t 0 ]]; then
@@ -324,37 +325,48 @@ if [[ -t 0 ]]; then
   # 1. 检查用户权限
   info "检查用户权限..."
   if [ "$(id -u)" -ne 0 ]; then
-    error "请以 root 用户或使用 su - 切换到 root 用户后重新运行此脚本。"
+    error "请以 root 用户或使用 sudo 运行此脚本。"
+    exit 1
   fi
 
-  # 2. 检查网络连接
+  # 2. 检查 `sudo` 是否存在
+  info "检查 sudo 是否存在..."
+  if ! command_exists sudo; then
+    error "sudo 命令未找到。请确保您以 root 用户运行此脚本。
+如果您确实需要安装 sudo，请按照以下步骤操作：
+1. 切换到 root 用户：`su -`
+2. 安装 sudo：`apt-get install sudo` 或 `yum install sudo`"
+    exit 1
+  fi
+
+  # 3. 检查网络连接
   info "检查网络连接..."
   check_network_connection
 
-  # 3. 获取安装路径
+  # 4. 获取安装路径
   info "获取安装路径..."
   install_path=$(get_install_path)
 
-  # 4. 安装依赖
+  # 5. 安装依赖
   info "安装依赖..."
   install_dependency vnstat
   install_dependency bc
   install_dependency curl
 
-  # 5. 验证 Telegram Bot Token 和 Chat ID
+  # 6. 验证 Telegram Bot Token 和 Chat ID
   info "验证 Telegram Bot Token 和 Chat ID..."
   verify_telegram_credentials
 
-  # 6. 部署脚本
+  # 7. 部署脚本
   info "部署脚本..."
   script_path="$install_path/vnstat_telegram.sh"
   deploy_script "$script_path"
 
-  # 7. 配置 crontab
+  # 8. 配置 crontab
   info "配置 crontab..."
   configure_crontab "$script_path"
 
-  # 8. 创建日志文件
+  # 9. 创建日志文件
   info "创建日志文件..."
   create_log_file
 
@@ -368,4 +380,5 @@ else
 请使用以下命令下载脚本并手动执行：
   curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh -o install.sh
   bash install.sh"
+  exit 1
 fi
