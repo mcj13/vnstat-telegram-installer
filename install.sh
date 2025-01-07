@@ -288,7 +288,7 @@ configure_crontab() {
 # 函数：验证时间格式
 validate_cron_time() {
   local cron_time="$1"
-  if ! [[ "$cron_time" =~ ^([0-5]?[0-9]) ([0-2]?[0-9])$ ]]; then
+  if ! echo "$cron_time" | grep -qE '^([0-5]?[0-9]) ([0-2]?[0-9])$'; then
     error "时间格式不正确，请输入正确的 MINUTE HOUR 格式（例如 0 8）。"
   fi
 }
