@@ -277,7 +277,7 @@ configure_crontab() {
     fi
 
     # 添加新的 crontab 任务
-    (crontab -l 2>/dev/null; echo "0 8 * * * $script_path") | crontab -
+    (crontab -l 2>/dev/null; echo "0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
     if [[ $? -eq 0 ]]; then
         info "crontab 配置成功！"
     else
@@ -298,6 +298,17 @@ create_log_file() {
     fi
 }
 
+# 函数：检查网络连接
+check_network_connection() {
+    info "正在检查网络连接..."
+    if ping -c 1 google.com &> /dev/null; then
+        info "网络连接正常。"
+    else
+        error "网络连接失败！请检查网络设置。"
+        exit 1
+    fi
+}
+
 # 主程序
 info "欢迎使用 vnstat_telegram 安装脚本！"
 
@@ -305,25 +316,35 @@ info "欢迎使用 vnstat_telegram 安装脚本！"
 if [[ -t 0 ]]; then
   # 是交互式终端，直接执行
   info "脚本正在执行..."
-  # 1. 验证 Telegram Bot Token 和 Chat ID
+
+  # 1. 检查用户权限
+  if [ "$(id -u)" -ne 0 ]; then
+    error "请以 root 用户或使用 sudo 运行此脚本。"
+    exit 1
+  fi
+
+  # 2. 检查网络连接
+  check_network_connection
+
+  # 3. 验证 Telegram Bot Token 和 Chat ID
   verify_telegram_credentials
 
-  # 2. 获取安装路径
+  # 4. 获取安装路径
   install_path=$(get_install_path)
 
-  # 3. 安装依赖
+  # 5. 安装依赖
   install_dependency vnstat
   install_dependency bc
   install_dependency curl
 
-  # 4. 部署脚本
+  # 6. 部署脚本
   script_path="$install_path/vnstat_telegram.sh"
   deploy_script "$script_path"
 
-  # 5. 配置 crontab
+  # 7. 配置 crontab
   configure_crontab "$script_path"
 
-  # 6. 创建日志文件
+  # 8. 创建日志文件
   create_log_file
 
   info "安装完成！"
