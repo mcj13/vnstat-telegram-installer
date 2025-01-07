@@ -18,7 +18,7 @@
 
 2. **执行脚本**
    
-   \`bash install.sh\`
+   `bash install.sh`
    
 
 3. **按照提示操作**
@@ -30,7 +30,7 @@
 
 1. **确保以 root 用户或使用 `sudo` 执行脚本**
    
-   \`sudo bash install.sh\`
+   `sudo bash install.sh`
    
 
 2. **输入 Telegram Bot Token 和 Chat ID**
@@ -46,7 +46,7 @@
 5. **修改 crontab**
    - 如果需要手动修改 crontab，可以使用以下命令：
      
-     \`crontab -e\`
+     `crontab -e`
      
    - 在打开的编辑器中添加或修改以下行：
      
