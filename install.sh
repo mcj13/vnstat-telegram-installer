@@ -11,31 +11,22 @@ NC='\033[0m' # No Color
 # 函数：输出带颜色的信息
 info() {
   echo -e "${GREEN}$1${NC}"
-  echo "INFO: $1"
 }
 
 warn() { 
   echo -e "${YELLOW}$1${NC}"
-  echo "WARN: $1"
 }
 
 error() { 
   while IFS= read -r line; do
     echo -e "${RED}$line${NC}"
-    echo "ERROR: $line"
   done <<< "$1"
   exit 1
 }
 
 # 函数：检查命令是否存在
 command_exists() {
-  echo "DEBUG: Checking if $1 exists..."
   command -v "$1" >/dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "DEBUG: $1 exists."
-  else
-    echo "DEBUG: $1 does not exist."
-  fi
 }
 
 # 函数：安装依赖
@@ -44,17 +35,17 @@ install_dependency() {
     if ! command_exists "$package"; then
         info "正在安装 $package..."
         if command_exists apt-get; then
-            apt-get update
-            apt-get install -y "$package"
+            sudo apt-get update
+            sudo apt-get install -y "$package"
         elif command_exists yum; then
-            yum install -y "$package"
+            sudo yum install -y "$package"
         else
-            error "无法找到 apt-get 或 yum，请手动安装 $package"
+            error "无法找到 apt-get 或 yum，请手动安装 $package
+错误信息: $!"
         fi
-        if command_exists "$package"; then
-            info "$package 安装成功！"
-        else
-            error "$package 安装失败！"
+        if ! command_exists "$package"; then
+            error "$package 安装失败！
+错误信息: $!"
         fi
     else
         info "$package 已安装。"
@@ -139,9 +130,10 @@ get_install_path() {
 是否创建该目录？(y/n) "
         read create_dir
         if [[ "$create_dir" == "y" || "$create_dir" == "Y" ]]; then
-            mkdir -p "$install_path"
+            sudo mkdir -p "$install_path"
             if [[ ! -d "$install_path" ]]; then
-              error "创建目录 $install_path 失败！"
+              error "创建目录 $install_path 失败！
+错误信息: $!"
             fi
             info "目录 $install_path 创建成功！"
         else
@@ -150,7 +142,8 @@ get_install_path() {
     fi
 
     if [[ ! -w "$install_path" ]]; then
-      error "安装路径 $install_path 没有写入权限！"
+      error "安装路径 $install_path 没有写入权限！
+错误信息: $!"
     fi
     echo "$install_path"
 }
@@ -268,7 +261,8 @@ EOF
     if [[ $? -eq 0 ]]; then
         info "脚本部署成功！"
     else
-        error "脚本部署失败！"
+        error "脚本部署失败！
+错误信息: $!"
     fi
 }
 
@@ -288,7 +282,8 @@ configure_crontab() {
     if [[ $? -eq 0 ]]; then
         info "crontab 配置成功！"
     else
-        error "crontab 配置失败！"
+        error "crontab 配置失败！
+错误信息: $!"
     fi
 }
 
@@ -299,7 +294,8 @@ create_log_file() {
     if [[ $? -eq 0 ]]; then
         info "日志文件创建成功！"
     else
-        error "日志文件创建失败！"
+        error "日志文件创建失败！
+错误信息: $!"
     fi
 }
 
@@ -309,7 +305,8 @@ check_network_connection() {
     if ping -c 1 google.com &> /dev/null; then
         info "网络连接正常。"
     else
-        error "网络连接失败！请检查网络设置。"
+        error "网络连接失败！请检查网络设置。
+错误信息: $!"
     fi
 }
 
