@@ -281,9 +281,15 @@ configure_crontab() {
 configure_crontab() {
     local script_path="$1"
     info "正在配置 crontab..."
-    crontab -l | grep -v "vnstat_telegram.sh" > /tmp/crontab
-    echo "0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1" >> /tmp/crontab
-    crontab /tmp/crontab
+
+    # 检查 crontab 是否已经存在
+    if crontab -l 2>/dev/null | grep -q "$script_path"; then
+        warn "crontab 中已存在该任务，跳过配置。"
+        return
+    fi
+
+    # 添加新的 crontab 任务
+    (crontab -l 2>/dev/null; echo "0 8 * * * $script_path") | crontab -
     if [[ $? -eq 0 ]]; then
         info "crontab 配置成功！"
     else
