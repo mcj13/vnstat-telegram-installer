@@ -288,8 +288,8 @@ configure_crontab() {
 # 函数：验证时间格式
 validate_cron_time() {
     local cron_time="$1"
-    if ! [[ "$cron_time" =~ ^([0-5]?[0-9]|[0-2][0-3]):([0-5]?[0-9])$ ]]; then
-        error "时间格式不正确，请输入正确的 HH:MM 格式（例如 18:00）。"
+    if ! [[ "$cron_time" =~ ^([0-5]?[0-9]) ([0-2]?[0-9])$ ]]; then
+        error "时间格式不正确，请输入正确的 MINUTE HOUR 格式（例如 0 8）。"
     fi
 }
 
@@ -355,9 +355,9 @@ if [[ -t 0 ]]; then
 
   # 7. 配置 crontab
   info "配置 crontab..."
-  read -p "请输入每天几点执行脚本（格式为 HH:MM，默认为 08:00）: " cron_time
+  read -p "请输入每天几点执行脚本（格式为 MINUTE HOUR，默认为 0 8）: " cron_time
   if [[ -z "$cron_time" ]]; then
-    cron_time="08:00"
+    cron_time="0 8"
   fi
   validate_cron_time "$cron_time"
   configure_crontab "$script_path" "$cron_time"
