@@ -266,13 +266,7 @@ configure_crontab() {
   # 添加新的 crontab 任务，默认每天 8 点执行
   (crontab -l 2>/dev/null; echo "0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
   if [[ $? -eq 0 ]]; then
-    info "crontab 配置成功！
-脚本将在每天 8 点运行。
-如需手工修改 crontab，请使用以下命令：
-  crontab -e
-并在打开的编辑器中添加或修改以下行：
-  0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1
-然后保存并退出。"
+    info "crontab 配置成功！"
   else
     error "crontab 配置失败！
 错误信息: $!"
