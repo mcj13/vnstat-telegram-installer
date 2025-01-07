@@ -335,16 +335,16 @@ if [[ -t 0 ]]; then
   # 3. 检查网络连接
   check_network_connection
 
-  # 4. 验证 Telegram Bot Token 和 Chat ID
-  verify_telegram_credentials
-
-  # 5. 获取安装路径
+  # 4. 获取安装路径
   install_path=$(get_install_path)
 
-  # 6. 安装依赖
+  # 5. 安装依赖
   install_dependency vnstat
   install_dependency bc
   install_dependency curl
+
+  # 6. 验证 Telegram Bot Token 和 Chat ID
+  verify_telegram_credentials
 
   # 7. 部署脚本
   script_path="$install_path/vnstat_telegram.sh"
