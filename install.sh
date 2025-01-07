@@ -269,6 +269,7 @@ EOF
 # 函数：配置 crontab
 configure_crontab() {
     local script_path="$1"
+    local cron_time="$2"
     info "正在配置 crontab..."
 
     # 检查 crontab 是否已经存在
@@ -278,7 +279,7 @@ configure_crontab() {
     fi
 
     # 添加新的 crontab 任务
-    (crontab -l 2>/dev/null; echo "0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
+    (crontab -l 2>/dev/null; echo "$cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
     if [[ $? -eq 0 ]]; then
         info "crontab 配置成功！"
     else
@@ -349,7 +350,11 @@ if [[ -t 0 ]]; then
 
   # 7. 配置 crontab
   info "配置 crontab..."
-  configure_crontab "$script_path"
+  read -p "请输入每天几点执行脚本（格式为 HH:MM，默认为 08:00）: " cron_time
+  if [[ -z "$cron_time" ]]; then
+    cron_time="08:00"
+  fi
+  configure_crontab "$script_path" "$cron_time"
 
   # 8. 创建日志文件
   info "创建日志文件..."
@@ -358,7 +363,13 @@ if [[ -t 0 ]]; then
   info "安装完成！
 脚本已安装到 $script_path
 日志文件已创建在 /var/log/vnstat_telegram.log
-脚本将在每天早上 8 点运行。"
+脚本将在每天 $cron_time 运行。
+
+如需手工修改 crontab，请使用以下命令：
+  crontab -e
+并在打开的编辑器中添加以下行：
+  $cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1
+然后保存并退出。"
 else
   # 不是交互式终端，提示用户下载并执行
   error "检测到非交互式执行 (例如管道执行)。
