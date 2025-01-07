@@ -267,18 +267,6 @@ EOF
 
 # 函数：配置 crontab
 configure_crontab() {
-    info "正在配置 crontab..."
-    (crontab -l 2>/dev/null; echo "*/5 * * * * $1") | crontab -
-    if [[ $? -eq 0 ]]; then
-        info "crontab 配置成功！"
-    else
-        error "crontab 配置失败！"
-        exit 1
-    fi
-}
-
-# 函数：配置 crontab
-configure_crontab() {
     local script_path="$1"
     info "正在配置 crontab..."
 
@@ -326,6 +314,7 @@ if [[ -t 0 ]]; then
   # 3. 安装依赖
   install_dependency vnstat
   install_dependency bc
+  install_dependency curl
 
   # 4. 部署脚本
   script_path="$install_path/vnstat_telegram.sh"
