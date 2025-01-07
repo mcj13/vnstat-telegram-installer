@@ -11,7 +11,11 @@ NC='\033[0m' # No Color
 # 函数：输出带颜色的信息
 info() { echo -e "${GREEN}$1${NC}"; }
 warn() { echo -e "${YELLOW}$1${NC}"; }
-error() { echo -e "${RED}$1${NC}"; }
+error() { 
+  while IFS= read -r line; do
+    echo -e "${RED}$line${NC}"
+  done <<< "$1"
+}
 
 # 函数：检查命令是否存在
 command_exists() {
@@ -325,10 +329,10 @@ if [[ -t 0 ]]; then
 
   # 2. 检查 `sudo` 是否存在
   if ! command_exists sudo; then
-    error "sudo 命令未找到。请确保您以 root 用户运行此脚本。"
-    error "如果您确实需要安装 sudo，请按照以下步骤操作："
-    error "1. 切换到 root 用户：`su -`"
-    error "2. 安装 sudo：`apt-get install sudo` 或 `yum install sudo`"
+    error "sudo 命令未找到。请确保您以 root 用户运行此脚本。
+如果您确实需要安装 sudo，请按照以下步骤操作：
+1. 切换到 root 用户：`su -`
+2. 安装 sudo：`apt-get install sudo` 或 `yum install sudo`"
     exit 1
   fi
 
@@ -362,11 +366,9 @@ if [[ -t 0 ]]; then
   info "脚本将在每天早上 8 点运行。"
 else
   # 不是交互式终端，提示用户下载并执行
-  error "检测到非交互式执行 (例如管道执行)。"
-  error "请使用以下命令下载脚本并手动执行："
-  echo
-  echo "  curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh -o install.sh"
-  echo "  bash install.sh"
-  echo
+  error "检测到非交互式执行 (例如管道执行)。
+请使用以下命令下载脚本并手动执行：
+  curl -sSL https://raw.githubusercontent.com/mcj13/vnstat-telegram-installer/main/install.sh -o install.sh
+  bash install.sh"
   exit 1
 fi
