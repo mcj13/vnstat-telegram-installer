@@ -272,11 +272,8 @@ configure_crontab() {
     local cron_time="$2"
     info "正在配置 crontab..."
 
-    # 检查 crontab 是否已经存在
-    if crontab -l 2>/dev/null | grep -q "$script_path"; then
-        warn "crontab 中已存在该任务，跳过配置。"
-        return
-    fi
+    # 删除已存在的任务
+    crontab -l | grep -v "$script_path" | crontab -
 
     # 添加新的 crontab 任务
     (crontab -l 2>/dev/null; echo "$cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
