@@ -50,7 +50,7 @@
      
    - 在打开的编辑器中添加或修改以下行：
      
-     \`0 8 * * * /usr/local/bin/vnstat_telegram.sh >> /var/log/vnstat_telegram.log 2&gt;&1\`
+     `0 8 * * * /usr/local/bin/vnstat_telegram.sh >> /var/log/vnstat_telegram.log 2&gt;&1`
      
 
 ## 常见问题解答
