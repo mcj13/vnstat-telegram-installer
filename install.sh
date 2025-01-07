@@ -160,10 +160,10 @@ deploy_script() {
 set -e
 
 # Telegram Bot API 令牌
-TOKEN="$TOKEN"
+TOKEN=""
 
 # Telegram 机器人聊天 ID
-CHAT_ID="$CHAT_ID"
+CHAT_ID=""
 
 # 获取服务器名称
 server_name=$(hostname)
@@ -250,6 +250,11 @@ fi
 EOF
 )
 
+    # 替换 TOKEN 和 CHAT_ID 变量
+    script_content=$(printf "%s" "$script_content" | sed "s/TOKEN/$(printf "%s" "$TOKEN" | sed 's/[\/&]/\\\\&/g')/g")
+    script_content=$(printf "%s" "$script_content" | sed "s/CHAT_ID/$(printf "%s" "$CHAT_ID" | sed 's/[\/&]/\\\\&/g')/g")
+
+    # 写入脚本文件
     printf "%s" "$script_content" > "$script_path"
     chmod +x "$script_path"
     if [[ $? -eq 0 ]]; then
