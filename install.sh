@@ -269,27 +269,24 @@ EOF
 # 函数：配置 crontab
 configure_crontab() {
   local script_path="$1"
-  local cron_time="$2"
   info "正在配置 crontab..."
 
   # 删除已存在的任务
   crontab -l | grep -v "$script_path" | crontab -
 
-  # 添加新的 crontab 任务
-  (crontab -l 2>/dev/null; echo "$cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
+  # 添加新的 crontab 任务，默认每天 8 点执行
+  (crontab -l 2>/dev/null; echo "0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1") | crontab -
   if [[ $? -eq 0 ]]; then
-    info "crontab 配置成功！"
+    info "crontab 配置成功！
+脚本将在每天 8 点运行。
+如需手工修改 crontab，请使用以下命令：
+  crontab -e
+并在打开的编辑器中添加或修改以下行：
+  0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1
+然后保存并退出。"
   else
     error "crontab 配置失败！
 错误信息: $!"
-  fi
-}
-
-# 函数：验证时间格式
-validate_cron_time() {
-  local cron_time="$1"
-  if ! echo "$cron_time" | grep -qE '^([0-5]?[0-9]) ([0-2]?[0-9])$'; then
-    error "时间格式不正确，请输入正确的 MINUTE HOUR 格式（例如 0 8）。"
   fi
 }
 
@@ -355,12 +352,7 @@ if [[ -t 0 ]]; then
 
   # 7. 配置 crontab
   info "配置 crontab..."
-  read -p "请输入每天几点执行脚本（格式为 MINUTE HOUR，默认为 0 8）: " cron_time
-  if [[ -z "$cron_time" ]]; then
-    cron_time="0 8"
-  fi
-  validate_cron_time "$cron_time"
-  configure_crontab "$script_path" "$cron_time"
+  configure_crontab "$script_path"
 
   # 8. 创建日志文件
   info "创建日志文件..."
@@ -369,12 +361,12 @@ if [[ -t 0 ]]; then
   info "安装完成！
 脚本已安装到 $script_path
 日志文件已创建在 /var/log/vnstat_telegram.log
-脚本将在每天 $cron_time 运行。
+脚本将在每天 8 点运行。
 
 如需手工修改 crontab，请使用以下命令：
   crontab -e
-并在打开的编辑器中添加以下行：
-  $cron_time $script_path >> /var/log/vnstat_telegram.log 2>&1
+并在打开的编辑器中添加或修改以下行：
+  0 8 * * * $script_path >> /var/log/vnstat_telegram.log 2>&1
 然后保存并退出。"
 else
   # 不是交互式终端，提示用户下载并执行
