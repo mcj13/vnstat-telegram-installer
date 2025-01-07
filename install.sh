@@ -285,6 +285,14 @@ configure_crontab() {
     fi
 }
 
+# 函数：验证时间格式
+validate_cron_time() {
+    local cron_time="$1"
+    if ! [[ "$cron_time" =~ ^([0-5]?[0-9]|[0-2][0-3]):([0-5]?[0-9])$ ]]; then
+        error "时间格式不正确，请输入正确的 HH:MM 格式（例如 18:00）。"
+    fi
+}
+
 # 函数：创建日志文件
 create_log_file() {
     info "正在创建日志文件..."
@@ -351,6 +359,7 @@ if [[ -t 0 ]]; then
   if [[ -z "$cron_time" ]]; then
     cron_time="08:00"
   fi
+  validate_cron_time "$cron_time"
   configure_crontab "$script_path" "$cron_time"
 
   # 8. 创建日志文件
