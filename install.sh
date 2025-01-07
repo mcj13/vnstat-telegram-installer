@@ -323,28 +323,37 @@ if [[ -t 0 ]]; then
     exit 1
   fi
 
-  # 2. 检查网络连接
+  # 2. 检查 `sudo` 是否存在
+  if ! command_exists sudo; then
+    error "sudo 命令未找到。请确保您以 root 用户运行此脚本。"
+    error "如果您确实需要安装 sudo，请按照以下步骤操作："
+    error "1. 切换到 root 用户：`su -`"
+    error "2. 安装 sudo：`apt-get install sudo` 或 `yum install sudo`"
+    exit 1
+  fi
+
+  # 3. 检查网络连接
   check_network_connection
 
-  # 3. 验证 Telegram Bot Token 和 Chat ID
+  # 4. 验证 Telegram Bot Token 和 Chat ID
   verify_telegram_credentials
 
-  # 4. 获取安装路径
+  # 5. 获取安装路径
   install_path=$(get_install_path)
 
-  # 5. 安装依赖
+  # 6. 安装依赖
   install_dependency vnstat
   install_dependency bc
   install_dependency curl
 
-  # 6. 部署脚本
+  # 7. 部署脚本
   script_path="$install_path/vnstat_telegram.sh"
   deploy_script "$script_path"
 
-  # 7. 配置 crontab
+  # 8. 配置 crontab
   configure_crontab "$script_path"
 
-  # 8. 创建日志文件
+  # 9. 创建日志文件
   create_log_file
 
   info "安装完成！"
