@@ -9,20 +9,9 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 # 函数：输出带颜色的信息
-info() {
-  echo -e "${GREEN}$1${NC}"
-}
-
-warn() { 
-  echo -e "${YELLOW}$1${NC}"
-}
-
-error() { 
-  while IFS= read -r line; do
-    echo -e "${RED}$line${NC}"
-  done <<< "$1"
-  exit 1
-}
+info() { echo -e "${GREEN}$1${NC}"; }
+warn() { echo -e "${YELLOW}$1${NC}"; }
+error() { while IFS= read -r line; do echo -e "${RED}$line${NC}"; done <<< "$1"; exit 1; }
 
 # 函数：检查命令是否存在
 command_exists() {
@@ -328,11 +317,9 @@ if [[ -t 0 ]]; then
   fi
 
   # 2. 检查网络连接
-  info "检查网络连接..."
   check_network_connection
 
   # 3. 获取安装路径
-  info "获取安装路径..."
   install_path=$(get_install_path)
 
   # 4. 安装依赖
@@ -342,20 +329,16 @@ if [[ -t 0 ]]; then
   install_dependency curl
 
   # 5. 验证 Telegram Bot Token 和 Chat ID
-  info "验证 Telegram Bot Token 和 Chat ID..."
   verify_telegram_credentials
 
   # 6. 部署脚本
-  info "部署脚本..."
   script_path="$install_path/vnstat_telegram.sh"
   deploy_script "$script_path"
 
   # 7. 配置 crontab
-  info "配置 crontab..."
   configure_crontab "$script_path"
 
   # 8. 创建日志文件
-  info "创建日志文件..."
   create_log_file
 
   info "安装完成！
